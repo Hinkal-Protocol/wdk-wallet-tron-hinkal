@@ -19,7 +19,7 @@ import {
   getERC20Token,
   createTronWeb,
   normalizeTronPrivateKey,
-  currentTronChainId,
+  detectTronChainIdFromHost,
   setHinkalTronChainId,
 } from "@hinkal/common";
 import { prepareTronHinkal } from "@hinkal/common/providers/prepareTronHinkal";
@@ -40,7 +40,26 @@ import { prepareTronHinkal } from "@hinkal/common/providers/prepareTronHinkal";
  */
 export default class WalletAccountTronHinkal extends WalletAccountTron {
   /**
-   * Prepares a Hinkal session funded by this account on the current Tron chain.
+   * Resolves the Tron chain id from the connected provider's host, mirroring how the
+   * EVM module derives its chain from the live provider instead of a build-time flag.
+   * Syncs Hinkal's active Tron chain so the SDK (which reads the module-level
+   * currentTronChainId) operates on the same network the wallet is connected to.
+   *
+   * @private
+   * @returns {number} The detected Tron chain id (mainnet or Nile).
+   * @throws {Error} If the wallet is not connected to tron web.
+   */
+  _resolveChainId() {
+    if (!this._tronWeb) {
+      throw new Error("The wallet must be connected to tron web.");
+    }
+    const chainId = detectTronChainIdFromHost(this._tronWeb.fullNode.host);
+    setHinkalTronChainId(chainId);
+    return chainId;
+  }
+
+  /**
+   * Prepares a Hinkal session funded by this account on the connected Tron chain.
    * Builds the signerAdapter bridge between this wallet's HDKey and Hinkal's TronProviderAdapter.
    *
    * @private
@@ -48,13 +67,11 @@ export default class WalletAccountTronHinkal extends WalletAccountTron {
    * @throws {Error} If the wallet is not connected to tron web.
    */
   async _prepareHinkal() {
-    if (!this._tronWeb) {
-      throw new Error("The wallet must be connected to tron web.");
-    }
+    const chainId = this._resolveChainId();
     const privateKey = normalizeTronPrivateKey(
       Buffer.from(this._account.privateKey).toString("hex"),
     );
-    const tronWeb = createTronWeb(currentTronChainId);
+    const tronWeb = createTronWeb(chainId);
 
     const signerAdapter = {
       on() {
@@ -87,16 +104,12 @@ export default class WalletAccountTronHinkal extends WalletAccountTron {
    * @throws {Error} If the token is not supported by Hinkal on the current chain.
    */
   async _prepareHinkalForToken(token) {
-    if (!this._tronWeb) {
-      throw new Error("The wallet must be connected to tron web.");
-    }
-
-    setHinkalTronChainId(currentTronChainId);
-    const erc20Token = getERC20Token(token, currentTronChainId);
+    const chainId = this._resolveChainId();
+    const erc20Token = getERC20Token(token, chainId);
 
     if (!erc20Token) {
       throw new Error(
-        `The token ${token} is not supported by Hinkal on chain ${currentTronChainId}.`,
+        `The token ${token} is not supported by Hinkal on chain ${chainId}.`,
       );
     }
     const hinkal = await this._prepareHinkal();
@@ -114,7 +127,9 @@ export default class WalletAccountTronHinkal extends WalletAccountTron {
    * @throws {Error} If the token is not supported by Hinkal on the current chain.
    */
   async privateSend({ token, recipient, amount }) {
-    const { hinkal, erc20Token } = await this._prepareHinkalForToken(token);
+    if (!this._tronWeb) {
+      throw new Error("The wallet must be connected to tron web.");
+    }
     if (!this._tronWeb.isAddress(recipient)) {
       throw new Error("Invalid Tron recipient address.");
     }
@@ -122,6 +137,7 @@ export default class WalletAccountTronHinkal extends WalletAccountTron {
     if (parsedAmount <= 0n) {
       throw new Error("Amount must be positive.");
     }
+    const { hinkal, erc20Token } = await this._prepareHinkalForToken(token);
     const hash = await hinkal.depositAndWithdraw(
       erc20Token,
       [parsedAmount],
@@ -152,12 +168,9 @@ export default class WalletAccountTronHinkal extends WalletAccountTron {
    * @throws {Error} If the wallet is not connected to tron web.
    */
   async stuckUtxoBalances() {
-    if (!this._tronWeb) {
-      throw new Error("The wallet must be connected to tron web.");
-    }
-    setHinkalTronChainId(currentTronChainId);
+    const chainId = this._resolveChainId();
     const hinkal = await this._prepareHinkal();
-    const balances = await hinkal.getStuckShieldedBalances(currentTronChainId);
+    const balances = await hinkal.getStuckShieldedBalances(chainId);
     return balances.map(({ token, balance }) => ({
       token: token.erc20TokenAddress,
       balance,

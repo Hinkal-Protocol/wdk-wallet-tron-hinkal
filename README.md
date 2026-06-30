@@ -13,13 +13,13 @@ All existing WDK wallet methods work unchanged.
 ## Installation
 
 ```sh
-npm install @hinkal/wdk-wallet-tron-hinkal
+npm install @hinkal-wdk-modules/wdk-wallet-tron-hinkal
 ```
 
 ## Usage
 
 ```js
-import WalletManagerTronHinkal from "@hinkal/wdk-wallet-tron-hinkal";
+import WalletManagerTronHinkal from "@hinkal-wdk-modules/wdk-wallet-tron-hinkal";
 
 const wallet = new WalletManagerTronHinkal(seed, {
   provider: "https://api.trongrid.io",

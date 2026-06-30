@@ -1,14 +1,14 @@
-# wdk-wallet-tron-hinkal
+# @hinkal/wdk-wallet-tron-hinkal
 
-A [WDK](https://docs.wdk.tether.io) community wallet module that adds [Hinkal](https://hinkal.pro)
-private transfers to Tron wallet accounts.
+Adds [Hinkal] private transfer support to Tron wallets built with [WDK](https://docs.wdk.tether.io).
 
-It extends [`@tetherto/wdk-wallet-tron`](https://www.npmjs.com/package/@tetherto/wdk-wallet-tron),
-so every standard account method keeps working and three Hinkal methods are added on top:
+Hinkal is a privacy protocol that shields token transfers on-chain. This package wraps `@tetherto/wdk-wallet-tron` and adds three methods to every account:
 
-- `privateSend` — shielded deposit and scheduled withdrawal to a recipient in a single call.
-- `withdrawStuckUtxos` — recover stranded shielded UTXOs back to your own address.
-- `stuckUtxoBalances` — list recoverable shielded balances per token.
+- **`privateSend`** — send tokens to any address privately. The transfer is shielded through Hinkal so the link between sender and recipient is hidden on-chain.
+- **`withdrawStuckUtxos`** — recover any shielded balances that got stuck in Hinkal back to your own address.
+- **`stuckUtxoBalances`** — check how much shielded balance is recoverable per token.
+
+All existing WDK wallet methods work unchanged.
 
 ## Installation
 
@@ -16,47 +16,25 @@ so every standard account method keeps working and three Hinkal methods are adde
 npm install @hinkal/wdk-wallet-tron-hinkal
 ```
 
-> **Note:** This module depends on `@hinkal/common`, which is distributed for bundled
-> environments. Use it through a bundler (Vite, webpack, React Native / Metro, or bare) rather
-> than plain Node.js ESM.
-
 ## Usage
 
 ```js
-import WalletManagerTronHinkal from '@hinkal/wdk-wallet-tron-hinkal'
+import WalletManagerTronHinkal from "@hinkal/wdk-wallet-tron-hinkal";
 
-const wallet = new WalletManagerTronHinkal(seed, { provider: 'https://api.trongrid.io' })
-const account = await wallet.getAccount(0)
+const wallet = new WalletManagerTronHinkal(seed, {
+  provider: "https://api.trongrid.io",
+});
+const account = await wallet.getAccount(0);
 
-// Send 1 USDT privately through Hinkal.
+// Send tokens privately through Hinkal
 const { hash } = await account.privateSend({
-  token: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
-  recipient: 'T...', // base58 Tron address
-  amount: 1_000_000n
-})
-
-// Inspect and recover stuck shielded balances.
-const balances = await account.stuckUtxoBalances()
-if (balances.length > 0) {
-  await account.withdrawStuckUtxos({ token: balances[0].token })
-}
+  token: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", // USDT on Tron
+  recipient: "T...", // base58 Tron address
+  amount: 1_000_000n, // 1 USDT in base units
+});
 ```
 
-## API
-
-### `account.privateSend({ token, recipient, amount }) => Promise<{ hash }>`
-
-Privately transfers `amount` (base units) of `token` to a `recipient` via Hinkal's
-`depositAndWithdraw`. Throws if the recipient is not a valid Tron address, the amount is not
-positive, or the token is unsupported.
-
-### `account.withdrawStuckUtxos({ token }) => Promise<{ hashes }>`
-
-Recovers stranded shielded UTXOs of `token` back to the account's own address.
-
-### `account.stuckUtxoBalances() => Promise<Array<{ token, balance }>>`
-
-Returns the recoverable shielded balance per token. An empty array means nothing is stuck.
+> Requires a bundler (Vite, webpack, Metro, or bare) — `@hinkal/common` is not plain Node.js ESM compatible.
 
 ## License
 

@@ -1,9 +1,18 @@
 {
   "name": "@hinkal/wdk-wallet-tron-hinkal",
-  "version": "1.0.0-beta.1",
+  "version": "0.0.1",
   "description": "WDK community module adding Hinkal private transfers to Tron wallet accounts.",
-  "keywords": ["wdk", "wallet", "tron", "hinkal", "privacy"],
+  "keywords": ["wdk", "wallet", "tron", "hinkal", "privacy", "wdk-hinkal", "private-transfer", "shielded"],
   "license": "Apache-2.0",
+  "author": "Hinkal <dev@hinkal.pro>",
+  "homepage": "https://hinkal.pro",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hinkal-Protocol/wdk-wallet-tron-hinkal.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Hinkal-Protocol/wdk-wallet-tron-hinkal/issues"
+  },
   "main": "index.js",
   "type": "module",
   "types": "./types",

@@ -1,6 +1,6 @@
 {
   "name": "@hinkal-wdk-modules/wdk-wallet-tron-hinkal",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "WDK community module adding Hinkal private transfers to Tron wallet accounts.",
   "keywords": ["wdk", "wallet", "tron", "hinkal", "privacy", "wdk-hinkal", "private-transfer", "shielded"],
   "license": "Apache-2.0",
